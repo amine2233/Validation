@@ -9,9 +9,9 @@ import Foundation
 
 struct AtomicProperty<T> {
     private var storageValue: T?
-    private let lock: Lock
+    private let lock: NSLock
 
-    init(lock: Lock) {
+    init(lock: NSLock = NSLock()) {
         self.lock = lock
     }
 

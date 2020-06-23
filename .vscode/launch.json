@@ -1,0 +1,41 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Run your exectuable",
+            "program": "${workspaceFolder}/.build/debug/${workspaceFolderBasename}",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "swift-build",
+            "terminal": "integrated"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug tests on macOS",
+            "program": "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+            "args": [
+                "${workspaceFolder}/.build/debug/${workspaceFolderBasename}PackageTests.xctest"
+            ],
+            "preLaunchTask": "swift-build-tests"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Run your exectuable on Linux",
+            "program": "${workspaceFolder}/.build/x86_64-unknown-linux-gnu/debug/${workspaceFolderBasename}",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "swift-build"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug tests on Linux",
+            "program": ".\/.build\/x86_64-unknown-linux-gnu\/debug\/${workspaceFolderBasename}PackageTests.xctest",
+            "preLaunchTask": "swift-build-tests"
+        }
+    ]
+}

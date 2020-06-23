@@ -121,7 +121,7 @@ final class ReflectedPropertyCache {
     }
 
     /// Private `ThreadSpecificVariable` powering this cache.
-    private static var thread: AtomicProperty<ReflectedPropertyCache> = .init(lock: Lock())
+    private static var thread: AtomicProperty<ReflectedPropertyCache> = .init()
 
     /// Instance storage.
     private var storage: [AnyKeyPath: ReflectedProperty]
