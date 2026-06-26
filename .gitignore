@@ -14,3 +14,7 @@
 tests.xml
 
 *.xcodeproj
+
+CLAUDE.md
+AGENT.md
+.claude
