@@ -30,7 +30,7 @@ Add the package to your `Package.swift` dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amine2233/Validation.git", from: "0.1.0")
+    .package(url: "https://github.com/amine2233/Validation.git", from: "0.0.2")
 ]
 ```
 
