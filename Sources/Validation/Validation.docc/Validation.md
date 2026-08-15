@@ -8,13 +8,17 @@ A lightweight, declarative validation library for Swift models.
 composable, type-safe validators, then validate an instance with a single call. It is
 inspired by and largely ported from [Vapor's Validation](https://github.com/vapor/validation).
 
+The package builds in Swift 6 language mode: every public type is `Sendable`, so
+validators are safe to store and share across concurrency domains. Coming from an
+earlier version? See <doc:MigratingToSwift6>.
+
 Conform a model to ``Validatable`` (and optionally ``Reflectable`` to get automatic
 error paths), declare its rules, and call ``Validatable/validate()``:
 
 ```swift
 import Validation
 
-final class User: Validatable, Reflectable, Codable {
+struct User: Validatable, Reflectable, Codable {
     var name: String
     var age: Int
     var email: String?
@@ -41,6 +45,8 @@ rather than stopping at the first one.
 
 - <doc:GettingStarted>
 - <doc:ComposingValidators>
+- <doc:ValidatingForms>
+- <doc:MigratingToSwift6>
 - ``Validatable``
 - ``Validations``
 - ``Validator``
