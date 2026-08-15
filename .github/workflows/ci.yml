@@ -8,8 +8,13 @@ on:
 
 jobs:
   ci:
-    uses: amine2233/ci-shared/.github/workflows/ci.yml@1.0
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: amine2233/ci-shared/.github/workflows/ci.yml@1.1
     with:
-      enable-coverage: true
-      macos-runner: macos-latest
-      enable-lint: false
+      enable-macos: true
+      enable-linux: true
+      enable-lint: true
+      enable-coverage: false
+      enable-title-check: true
