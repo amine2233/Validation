@@ -35,7 +35,6 @@ run = '''
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Map usage flags to executor options
 dry_run_opt=""
 if [[ "${usage_dry_run:-}" == "true" ]]; then
     dry_run_opt="--dry-run"
@@ -51,7 +50,6 @@ if [[ "${usage_verbose:-}" == "true" ]]; then
     enable_verbose_opt="--verbose"
 fi
 
-# Default to skipping CI unless explicitly disabled
 skip_ci_opt="--skip-ci"
 if [[ "${usage_skip_ci:-}" == "false" ]]; then
     skip_ci_opt="--no-skip-ci"
