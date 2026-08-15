@@ -8,6 +8,9 @@ To validate a type, conform it to ``Validatable`` and implement
 ``Validatable/validations()``. Conforming to ``Reflectable`` (free for `Codable`
 types) lets the library infer human-readable error paths from each property's `KeyPath`.
 
+``Validatable`` inherits `Sendable`, so a `struct` whose properties are all `Sendable`
+conforms as-is; a `class` needs `@unchecked Sendable`. See <doc:MigratingToSwift6>.
+
 ### Declaring validations
 
 Build a ``Validations`` value and add a rule per property:
@@ -15,7 +18,7 @@ Build a ``Validations`` value and add a rule per property:
 ```swift
 import Validation
 
-final class User: Validatable, Reflectable, Codable {
+struct User: Validatable, Reflectable, Codable {
     var name: String
     var age: Int
     var email: String?
@@ -49,7 +52,7 @@ rule fails:
 ```swift
 do {
     try user.validate()
-} catch let error as ValidationError {
+} catch let error as any ValidationError {
     print(error.reason)
 }
 ```

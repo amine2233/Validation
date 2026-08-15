@@ -1,6 +1,6 @@
 # Validation
 
-[![Swift](https://github.com/amine2233/Validation/actions/workflows/swift.yml/badge.svg)](https://github.com/amine2233/Validation/actions/workflows/swift.yml)
+[![CI](https://github.com/amine2233/Validation/actions/workflows/ci.yml/badge.svg)](https://github.com/amine2233/Validation/actions/workflows/ci.yml)
 
 A lightweight, declarative validation library for Swift models, inspired by and
 largely ported from [Vapor's Validation](https://github.com/vapor/validation).
@@ -15,12 +15,13 @@ human-readable, fully-qualified key paths.
 - 🧩 Composable validators with `&&`, `||` and `!` operators
 - 🔍 Automatic error-path reflection for `Codable` / `Reflectable` models
 - 📦 Collects **all** validation errors in one pass (not fail-fast)
+- 🔒 Swift 6 language mode — every public type is `Sendable`
 - 🐧 Builds and tests on both macOS and Linux
 
 ## Requirements
 
-- Swift 5.2+
-- iOS 13+ / macOS 10.15+ / tvOS 13+ / watchOS 6+ (when used via CocoaPods)
+- Swift 6.0+ toolchain (the package builds in Swift 6 language mode)
+- Apple platforms or Linux
 
 ## Installation
 
@@ -40,12 +41,6 @@ Then add `Validation` to your target's dependencies:
 .target(name: "MyApp", dependencies: ["Validation"])
 ```
 
-### CocoaPods
-
-```ruby
-pod 'Validation'
-```
-
 ## Usage
 
 Conform your model to `Validatable` (and `Reflectable` to get automatic error
@@ -54,7 +49,7 @@ paths), then declare its validations:
 ```swift
 import Validation
 
-final class User: Validatable, Reflectable, Codable {
+struct User: Validatable, Reflectable, Codable {
     var name: String
     var age: Int
     var email: String?
@@ -95,7 +90,7 @@ let user = User(/* ... */)
 
 do {
     try user.validate()
-} catch let error as ValidationError {
+} catch let error as any ValidationError {
     print(error.reason) // e.g. "name is less than required minimum of 5 characters"
 }
 ```
@@ -106,6 +101,86 @@ Individual validators can also be used directly:
 try Validator<String>.email.validate("user@example.com")
 try Validator<Int>.range(-5...5).validate(4)
 ```
+
+## Swift 6 & Sendable
+
+`Validatable`, `ValidatorType` and `ValidationError` now inherit `Sendable`, and
+`Validator` stores an `@Sendable` closure. Two consequences when upgrading:
+
+- A model conforming to `Validatable` must be `Sendable`. A `struct` of `Sendable`
+  properties qualifies as-is; a `class` needs `@unchecked Sendable` (or, better, becomes
+  a `struct`).
+- Validated property types must be `Sendable` — `add(_:_:)` is now
+  `add<T: Sendable>(_:_:)` — and custom closures passed to `add(_:at:_:custom:)` are
+  `@Sendable`, so they cannot capture mutable shared state.
+
+```swift
+final class User: Validatable, Reflectable, Codable, @unchecked Sendable { /* ... */ }
+```
+
+Also removed in the Swift 6 release: the CocoaPods podspec, `Tests/LinuxMain.swift` and
+`XCTestManifests.swift` — tests use [Swift Testing](https://github.com/swiftlang/swift-testing),
+which discovers tests on Linux without generated manifests.
+
+The full list of breaking changes is in the
+[Migrating to Swift 6](Sources/Validation/Validation.docc/MigratingToSwift6.md) article.
+
+## Example: forms, field by field and all at once
+
+The same `Validator` values drive a live UI form and a server-side payload check —
+only the reporting strategy differs.
+
+**Front end — first failure per field.** A text field has room for one message, so stop
+at the first unmet rule:
+
+```swift
+struct FieldRule<Value: Sendable>: Sendable {
+    let validator: Validator<Value>
+    let message: String
+}
+
+func evaluate<Value>(_ value: Value, rules: [FieldRule<Value>]) -> String? {
+    for rule in rules {
+        do { try rule.validator.validate(value) } catch { return rule.message }
+    }
+    return nil
+}
+
+evaluate(password, rules: [
+    FieldRule(validator: .count(8...), message: "At least 8 characters."),
+    FieldRule(validator: .alphanumeric, message: "Letters and digits only."),
+])
+```
+
+**Back end — every failure in one shot.** `Validations.run(on:)` never stops at the
+first failure, so `validate()` reports the whole list in a single `reason`:
+
+```swift
+struct SignUpRequest: Validatable, Reflectable, Codable {
+    var email: String
+    var password: String
+    var age: Int
+
+    static func validations() throws -> Validations<SignUpRequest> {
+        var validations = Validations(SignUpRequest.self)
+        try validations.add(\.email, .email)
+        try validations.add(\.password, .count(8...) && .alphanumeric)
+        try validations.add(\.age, .range(18...))
+        return validations
+    }
+}
+
+do {
+    try request.validate()
+} catch let error as any ValidationError {
+    // "email is not a valid email address, age is less than 18"
+    print(error.reason)
+}
+```
+
+The complete version — a `FieldValidation` state enum, a `FormValidatable` protocol
+that derives `isValid` and per-field errors, and rules shared between both layers — is
+in the [Validating Forms](Sources/Validation/Validation.docc/ValidatingForms.md) article.
 
 ## Built-in validators
 
@@ -139,27 +214,28 @@ try Validator<Int>.range(-5...5).validate(4)
 ## Documentation
 
 API documentation is provided as a [DocC](https://www.swift.org/documentation/docc/)
-catalog located at `Sources/Validation/Validation.docc`. Build it with:
+catalog located at `Sources/Validation/Validation.docc`, and published to
+[GitHub Pages](https://amine2233.github.io/Validation/documentation/validation) on every
+push to `main`. Build it locally with:
 
 ```bash
-swift package generate-documentation        # requires the Swift-DocC plugin
-# or, in Xcode: Product ▸ Build Documentation
+mise run build_documentations macOS --serve   # or: Product ▸ Build Documentation in Xcode
 ```
 
 ## Development
 
 ```bash
-swift build -v                                   # Build
-swift test -v                                    # Run all tests
-swift test --filter ValidationTests/testEmail    # Run a single test
-swift test --generate-linuxmain                  # Regenerate Linux test manifests
+swift build -v                                        # Build
+mise run test                                         # Run all tests
+swift test --filter "ValidationTests/email"           # Run a single test
+mise run lint                                         # Format + code + documentation checks
+mise run format                                       # Format the code
 ```
 
-> **Note:** Tests use XCTest. Because the package supports Linux, regenerate the test
-> manifests with `swift test --generate-linuxmain` whenever you add or remove a test,
-> otherwise the new test will not run on Linux CI.
+> **Note:** Tests use [Swift Testing](https://github.com/swiftlang/swift-testing)
+> (`@Test`, `#expect`). Test discovery works on Linux without generated manifests, so no
+> `--generate-linuxmain` step is needed anymore.
 
 ## License
 
 `Validation` is available under the MIT license.
-</content>
