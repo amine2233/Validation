@@ -1,10 +1,3 @@
-//
-//  EmailValidator.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 extension Validator where T == String {
@@ -13,26 +6,30 @@ extension Validator where T == String {
     ///     try validations.add(\.email, .email)
     ///
     public static var email: Validator<T> {
-        return EmailValidator().validator()
+        EmailValidator().validator()
     }
 }
 
 // MARK: Private
+
 /// Validates whether a string is a valid email address.
-fileprivate struct EmailValidator: ValidatorType {
+private struct EmailValidator: ValidatorType {
     /// See `ValidatorType`.
-    public var validatorReadable: String {
-        return "a valid email address"
+    var validatorReadable: String {
+        "a valid email address"
     }
 
     /// Creates a new `EmailValidator`.
-    public init() {}
+    init() {}
 
     /// See `Validator`.
-    public func validate(_ s: String) throws {
+    func validate(_ s: String) throws {
         guard
-            let range = s.range(of: "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}", options: [.regularExpression, .caseInsensitive]),
-            range.lowerBound == s.startIndex && range.upperBound == s.endIndex
+            let range = s.range(
+                of: "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}",
+                options: [.regularExpression, .caseInsensitive]
+            ),
+            range.lowerBound == s.startIndex, range.upperBound == s.endIndex
         else {
             throw BasicValidationError("is not a valid email address")
         }

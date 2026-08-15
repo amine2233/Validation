@@ -1,19 +1,12 @@
-//
-//  CountValidator.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
-extension Validator where T: Collection {
+extension Validator where T: Collection & Sendable {
     /// Validates that the data's count is within the supplied `ClosedRange`.
     ///
     ///     try validations.add(\.name, .count(5...10))
     ///
     public static func count(_ range: ClosedRange<Int>) -> Validator<T> {
-        return CountValidator(min: range.lowerBound, max: range.upperBound).validator()
+        CountValidator(min: range.lowerBound, max: range.upperBound).validator()
     }
 
     /// Validates that the data's count is less than the supplied upper bound using `PartialRangeThrough`.
@@ -21,7 +14,7 @@ extension Validator where T: Collection {
     ///     try validations.add(\.name, .count(...10))
     ///
     public static func count(_ range: PartialRangeThrough<Int>) -> Validator<T> {
-        return CountValidator(min: nil, max: range.upperBound).validator()
+        CountValidator(min: nil, max: range.upperBound).validator()
     }
 
     /// Validates that the data's count is less than the supplied lower bound using `PartialRangeFrom`.
@@ -29,7 +22,7 @@ extension Validator where T: Collection {
     ///     try validations.add(\.name, .count(5...))
     ///
     public static func count(_ range: PartialRangeFrom<Int>) -> Validator<T> {
-        return CountValidator(min: range.lowerBound, max: nil).validator()
+        CountValidator(min: range.lowerBound, max: nil).validator()
     }
 
     /// Validates that the data's count is within the supplied `Range`.
@@ -37,23 +30,24 @@ extension Validator where T: Collection {
     ///     try validations.add(\.name, .count(5..<10))
     ///
     public static func count(_ range: Range<Int>) -> Validator<T> {
-        return CountValidator(min: range.lowerBound, max: range.upperBound.advanced(by: -1)).validator()
+        CountValidator(min: range.lowerBound, max: range.upperBound.advanced(by: -1)).validator()
     }
 }
 
 // MARK: Private
+
 /// Validates whether the item's count is within a supplied int range.
-fileprivate struct CountValidator<T>: ValidatorType where T: Collection {
+private struct CountValidator<T: Collection & Sendable>: ValidatorType {
     /// See `ValidatorType`.
     var validatorReadable: String {
         if let min = self.min, let max = self.max {
-            return "between \(min) and \(elementDescription(count: max))"
+            "between \(min) and \(elementDescription(count: max))"
         } else if let min = self.min {
-            return "at least \(elementDescription(count: min))"
+            "at least \(elementDescription(count: min))"
         } else if let max = self.max {
-            return "at most \(elementDescription(count: max))"
+            "at most \(elementDescription(count: max))"
         } else {
-            return "valid"
+            "valid"
         }
     }
 
@@ -76,22 +70,26 @@ fileprivate struct CountValidator<T>: ValidatorType where T: Collection {
     func validate(_ data: T) throws {
         if let min = self.min {
             guard data.count >= min else {
-                throw BasicValidationError("is less than required minimum of \(elementDescription(count: min))")
+                throw BasicValidationError(
+                    "is less than required minimum of \(elementDescription(count: min))"
+                )
             }
         }
 
         if let max = self.max {
             guard data.count <= max else {
-                throw BasicValidationError("is greater than required maximum of \(elementDescription(count: max))")
+                throw BasicValidationError(
+                    "is greater than required maximum of \(elementDescription(count: max))"
+                )
             }
         }
     }
 
     private func elementDescription(count: Int) -> String {
         if T.Element.self is Character.Type {
-            return count == 1 ? "1 character" : "\(count) characters"
+            count == 1 ? "1 character" : "\(count) characters"
         } else {
-            return count == 1 ? "1 item" : "\(count) items"
+            count == 1 ? "1 item" : "\(count) items"
         }
     }
 }

@@ -1,10 +1,3 @@
-//
-//  URLValidator.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 extension Validator where T == String {
@@ -20,27 +13,28 @@ extension Validator where T == String {
     /// containing at least a scheme and a host.
     ///
     public static var url: Validator<T> {
-        return URLValidator().validator()
+        URLValidator().validator()
     }
 }
 
 // MARK: Private
+
 /// Validates whether a string is a valid email address.
-fileprivate struct URLValidator: ValidatorType {
+private struct URLValidator: ValidatorType {
     typealias ValidationData = String
 
     /// See `ValidatorType`.
-    public var validatorReadable: String {
-        return "a valid URL"
+    var validatorReadable: String {
+        "a valid URL"
     }
 
     /// Creates a new `URLValidator`.
-    public init() {}
+    init() {}
 
     /// See `Validator`.
     func validate(_ data: String) throws {
         guard let url = URL(string: data),
-            url.isFileURL || (url.host != nil && url.scheme != nil) else {
+              url.isFileURL || (url.host != nil && url.scheme != nil) else {
             throw BasicValidationError("is not a valid URL")
         }
     }

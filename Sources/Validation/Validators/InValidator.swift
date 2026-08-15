@@ -1,19 +1,12 @@
-//
-//  InValidator.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
-extension Validator where T: Equatable {
+extension Validator where T: Equatable & Sendable {
     /// Validates whether an item is contained in the supplied array.
     ///
     ///     try validations.add(\.name, .in("foo", "bar"))
     ///
     public static func `in`(_ array: T...) -> Validator<T> {
-        return .in(array)
+        .in(array)
     }
 
     /// Validates whether an item is contained in the supplied array.
@@ -21,15 +14,16 @@ extension Validator where T: Equatable {
     ///     try validations.add(\.name, .in(["foo", "bar"]))
     ///
     public static func `in`(_ array: [T]) -> Validator<T> {
-        return InValidator(array).validator()
+        InValidator(array).validator()
     }
 }
 
 // MARK: Private
+
 /// Validates whether an item is contained in the supplied array.
-fileprivate struct InValidator<T>: ValidatorType where T: Equatable {
+private struct InValidator<T: Equatable & Sendable>: ValidatorType {
     /// See `ValidatorType`.
-    public var validatorReadable: String {
+    var validatorReadable: String {
         let all = array.map { "\($0)" }.joined(separator: ", ")
         return "in (\(all))"
     }
@@ -38,12 +32,12 @@ fileprivate struct InValidator<T>: ValidatorType where T: Equatable {
     let array: [T]
 
     /// Creates a new `InValidator`.
-    public init(_ array: [T]) {
+    init(_ array: [T]) {
         self.array = array
     }
 
     /// See `Validator`.
-    public func validate(_ item: T) throws {
+    func validate(_ item: T) throws {
         guard array.contains(item) else {
             throw BasicValidationError("is not \(validatorReadable)")
         }

@@ -1,10 +1,3 @@
-//
-//  Decodable+Reflectable.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 /// Default `Reflectable` implementation for types that are also `Decodable`.
@@ -13,19 +6,23 @@ extension Reflectable where Self: Decodable {
     ///
     /// See `Reflectable.reflectProperties(depth:)`
     public static func reflectProperties(depth: Int) throws -> [ReflectedProperty] {
-        return try decodeProperties(depth: depth)
+        try decodeProperties(depth: depth)
     }
 
     /// Default `Reflectable` implementation for types that are also `Decodable`.
     ///
     /// See `AnyReflectable`.
-    public static func anyReflectProperty(valueType: Any.Type, keyPath: AnyKeyPath) throws -> ReflectedProperty? {
-        return try anyDecodeProperty(valueType: valueType, keyPath: keyPath)
+    public static func anyReflectProperty(
+        valueType: Any.Type,
+        keyPath: AnyKeyPath
+    ) throws -> ReflectedProperty? {
+        try anyDecodeProperty(valueType: valueType, keyPath: keyPath)
     }
 }
 
 extension Decodable {
-    /// Decodes all `CodableProperty`s for this type. This requires that all propeties on this type are `ReflectionDecodable`.
+    /// Decodes all `CodableProperty`s for this type. This requires that all propeties on this type are
+    /// `ReflectionDecodable`.
     ///
     /// This is used to provide a default implementation for `reflectProperties(depth:)` on `Reflectable`.
     ///
@@ -51,7 +48,7 @@ extension Decodable {
     /// - throws: Any error decoding this property.
     /// - returns: `ReflectedProperty` if one was found.
     public static func decodeProperty<T>(forKey keyPath: KeyPath<Self, T>) throws -> ReflectedProperty? {
-        return try anyDecodeProperty(valueType: T.self, keyPath: keyPath)
+        try anyDecodeProperty(valueType: T.self, keyPath: keyPath)
     }
 
     /// Decodes a `CodableProperty` for the supplied `KeyPath`. This requires that all propeties on this
@@ -62,12 +59,18 @@ extension Decodable {
     /// - parameters:
     ///     - keyPath: `AnyKeyPath` to decode a property for.
     /// - throws: Any error decoding this property.
-    public static func anyDecodeProperty(valueType: Any.Type, keyPath: AnyKeyPath) throws -> ReflectedProperty? {
+    public static func anyDecodeProperty(
+        valueType: Any.Type,
+        keyPath: AnyKeyPath
+    ) throws -> ReflectedProperty? {
         guard valueType is AnyReflectionDecodable.Type else {
-            throw CoreError(identifier: "ReflectionDecodable", reason: "`\(valueType)` does not conform to `ReflectionDecodable`.")
+            throw CoreError(
+                identifier: "ReflectionDecodable",
+                reason: "`\(valueType)` does not conform to `ReflectionDecodable`."
+            )
         }
 
-        if let cached = ReflectedPropertyCache.storage[keyPath] {
+        if let cached = ReflectedPropertyCache.shared[keyPath] {
             return cached
         }
 
@@ -90,14 +93,14 @@ extension Decodable {
                     // no more values are being set at this depth
                     break b
                 }
-
-                guard let t = valueType as? AnyReflectionDecodable.Type, let left = decoded[keyPath: keyPath] else {
+                guard let t = valueType as? AnyReflectionDecodable.Type,
+                      let left = decoded[keyPath: keyPath] else {
                     break b
                 }
 
                 if try t.anyReflectDecodedIsLeft(left) {
                     let property = ReflectedProperty(any: valueType, at: codingPath.map { $0.stringValue })
-                    ReflectedPropertyCache.storage[keyPath] = property
+                    ReflectedPropertyCache.shared[keyPath] = property
                     return property
                 }
             }
@@ -105,29 +108,19 @@ extension Decodable {
     }
 }
 
-/// Caches derived `ReflectedProperty`s so that they only need to be decoded once per thread.
-final class ReflectedPropertyCache {
-    /// Thread-specific shared storage.
-    static var storage: [AnyKeyPath: ReflectedProperty] {
-        get {
-            let cache = ReflectedPropertyCache.thread.currentValue ?? .init()
-            return cache.storage
-        }
-        set {
-            let cache = ReflectedPropertyCache.thread.currentValue ?? .init()
-            cache.storage = newValue
-            ReflectedPropertyCache.thread.currentValue = cache
-        }
-    }
+/// Caches derived `ReflectedProperty`s so that they only need to be decoded once.
+///
+/// A single process-wide store guarded by an `NSLock`. (The previous implementation
+/// documented itself as thread-specific but was in fact one shared value behind one
+/// lock, so this preserves the original behavior while being race-free.)
+final class ReflectedPropertyCache: @unchecked Sendable {
+    static let shared = ReflectedPropertyCache()
 
-    /// Private `ThreadSpecificVariable` powering this cache.
-    private static var thread: AtomicProperty<ReflectedPropertyCache> = .init()
+    private let lock = NSLock()
+    private var storage: [AnyKeyPath: ReflectedProperty] = [:]
 
-    /// Instance storage.
-    private var storage: [AnyKeyPath: ReflectedProperty]
-
-    /// Creates a new `ReflectedPropertyCache`.
-    init() {
-        self.storage = [:]
+    subscript(key: AnyKeyPath) -> ReflectedProperty? {
+        get { lock.lock(); defer { lock.unlock() }; return storage[key] }
+        set { lock.lock(); defer { lock.unlock() }; storage[key] = newValue }
     }
 }

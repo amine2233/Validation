@@ -1,29 +1,24 @@
-//
-//  EmptyValidator.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 extension Validator where T: Collection {
-    /// Validates that the data is empty. You can also check a non empty state by combining with the `NotValidator`
+    /// Validates that the data is empty. You can also check a non empty state by combining with the
+    /// `NotValidator`
     ///
     ///     try validations.add(\.name, .empty)
     ///     try validations.add(\.name, !.empty)
     ///
     public static var empty: Validator<T> {
-        return EmptyValidator().validator()
+        EmptyValidator().validator()
     }
 }
 
 // MARK: Private
+
 /// Validates whether the data is empty.
-fileprivate struct EmptyValidator<T>: ValidatorType where T: Collection {
+private struct EmptyValidator<T: Collection>: ValidatorType {
     /// See `ValidatorType`.
     var validatorReadable: String {
-        return "empty"
+        "empty"
     }
 
     /// See `ValidatorType`.

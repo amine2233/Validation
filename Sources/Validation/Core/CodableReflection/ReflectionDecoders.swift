@@ -1,16 +1,10 @@
-//
-//  ReflectionDecoders.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 /// Internal types for powering the default implementation of `Reflectable` for `Decodable` types.
 ///
 /// See `Decodable.decodeProperties(depth:)` and `Decodable.decodeProperty(forKey:)` for more information.
 // MARK: Internal
+
 /// Reference class for collecting information about `Decodable` types when initializing them.
 final class ReflectionDecoderContext {
     /// If set, this is the `CodingKey` path to the truthy value in the initialized model.
@@ -43,7 +37,7 @@ final class ReflectionDecoderContext {
         self.maxDepth = maxDepth
         self.properties = []
         self.activeOffset = activeOffset
-        currentOffset = 0
+        self.currentOffset = 0
     }
 
     /// Adds a property to this `ReflectionDecoderContext`.
@@ -51,7 +45,7 @@ final class ReflectionDecoderContext {
         let path = path.map { $0.stringValue }
         // remove any duplicates, favoring the new type
         properties = properties.filter { $0.path != path }
-        let property = ReflectedProperty.init(T.self, at: path)
+        let property = ReflectedProperty(T.self, at: path)
         properties.append(property)
     }
 }
@@ -60,23 +54,20 @@ final class ReflectionDecoderContext {
 struct ReflectionDecoder: Decoder {
     var codingPath: [CodingKey]
     var context: ReflectionDecoderContext
-    var userInfo: [CodingUserInfoKey: Any] { return [:] }
-
-    init(codingPath: [CodingKey], context: ReflectionDecoderContext) {
-        self.codingPath = codingPath
-        self.context = context
+    var userInfo: [CodingUserInfoKey: Any] {
+        [:]
     }
 
-    func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        return .init(ReflectionKeyedDecoder<Key>(codingPath: codingPath, context: context))
+    func container<Key: CodingKey>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> {
+        .init(ReflectionKeyedDecoder<Key>(codingPath: codingPath, context: context))
     }
 
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        return ReflectionUnkeyedDecoder(codingPath: codingPath, context: context)
+        ReflectionUnkeyedDecoder(codingPath: codingPath, context: context)
     }
 
     func singleValueContainer() throws -> SingleValueDecodingContainer {
-        return ReflectionSingleValueDecoder(codingPath: codingPath, context: context)
+        ReflectionSingleValueDecoder(codingPath: codingPath, context: context)
     }
 }
 
@@ -85,16 +76,11 @@ struct ReflectionSingleValueDecoder: SingleValueDecodingContainer {
     var codingPath: [CodingKey]
     var context: ReflectionDecoderContext
 
-    init(codingPath: [CodingKey], context: ReflectionDecoderContext) {
-        self.codingPath = codingPath
-        self.context = context
-    }
-
     func decodeNil() -> Bool {
-        return false
+        false
     }
 
-    func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
+    func decode<T: Decodable>(_ type: T.Type) throws -> T {
         context.addProperty(type: T.self, at: codingPath)
         let type = try forceCast(T.self)
         let reflected = try type.anyReflectDecoded()
@@ -107,9 +93,12 @@ struct ReflectionSingleValueDecoder: SingleValueDecodingContainer {
 }
 
 /// Keyed decoder for codable reflection.
-final class ReflectionKeyedDecoder<K>: KeyedDecodingContainerProtocol where K: CodingKey {
+final class ReflectionKeyedDecoder<K: CodingKey>: KeyedDecodingContainerProtocol {
     typealias Key = K
-    var allKeys: [K] { return [] }
+    var allKeys: [K] {
+        []
+    }
+
     var codingPath: [CodingKey]
     var context: ReflectionDecoderContext
     var nextIsOptional: Bool
@@ -132,23 +121,26 @@ final class ReflectionKeyedDecoder<K>: KeyedDecodingContainerProtocol where K: C
         return true
     }
 
-    func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: K) throws -> KeyedDecodingContainer<NestedKey> where NestedKey: CodingKey {
-        return .init(ReflectionKeyedDecoder<NestedKey>(codingPath: codingPath + [key], context: context))
+    func nestedContainer<NestedKey: CodingKey>(
+        keyedBy type: NestedKey.Type,
+        forKey key: K
+    ) throws -> KeyedDecodingContainer<NestedKey> {
+        .init(ReflectionKeyedDecoder<NestedKey>(codingPath: codingPath + [key], context: context))
     }
 
     func nestedUnkeyedContainer(forKey key: K) throws -> UnkeyedDecodingContainer {
-        return ReflectionUnkeyedDecoder(codingPath: codingPath + [key], context: context)
+        ReflectionUnkeyedDecoder(codingPath: codingPath + [key], context: context)
     }
 
     func superDecoder() throws -> Decoder {
-        return ReflectionDecoder(codingPath: codingPath, context: context)
+        ReflectionDecoder(codingPath: codingPath, context: context)
     }
 
     func superDecoder(forKey key: K) throws -> Decoder {
-        return ReflectionDecoder(codingPath: codingPath + [key], context: context)
+        ReflectionDecoder(codingPath: codingPath + [key], context: context)
     }
 
-    func decode<T>(_ type: T.Type, forKey key: K) throws -> T where T : Decodable {
+    func decode<T: Decodable>(_ type: T.Type, forKey key: K) throws -> T {
         if nextIsOptional {
             context.addProperty(type: T?.self, at: codingPath + [key])
             nextIsOptional = false
@@ -169,7 +161,7 @@ final class ReflectionKeyedDecoder<K>: KeyedDecodingContainerProtocol where K: C
 }
 
 /// Unkeyed decoder for codable reflection.
-fileprivate struct ReflectionUnkeyedDecoder: UnkeyedDecodingContainer {
+private struct ReflectionUnkeyedDecoder: UnkeyedDecodingContainer {
     var count: Int?
     var isAtEnd: Bool
     var currentIndex: Int
@@ -195,7 +187,7 @@ fileprivate struct ReflectionUnkeyedDecoder: UnkeyedDecodingContainer {
         return true
     }
 
-    mutating func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
+    mutating func decode<T: Decodable>(_ type: T.Type) throws -> T {
         context.addProperty(type: [T].self, at: codingPath)
         isAtEnd = true
         if let type = T.self as? AnyReflectionDecodable.Type, let reflected = try? type.anyReflectDecoded() {
@@ -206,15 +198,16 @@ fileprivate struct ReflectionUnkeyedDecoder: UnkeyedDecodingContainer {
         }
     }
 
-    mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-        return .init(ReflectionKeyedDecoder<NestedKey>(codingPath: codingPath, context: context))
+    mutating func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey
+        .Type) throws -> KeyedDecodingContainer<NestedKey> {
+        .init(ReflectionKeyedDecoder<NestedKey>(codingPath: codingPath, context: context))
     }
 
     mutating func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
-        return ReflectionUnkeyedDecoder(codingPath: codingPath, context: context)
+        ReflectionUnkeyedDecoder(codingPath: codingPath, context: context)
     }
 
     mutating func superDecoder() throws -> Decoder {
-        return ReflectionDecoder(codingPath: codingPath, context: context)
+        ReflectionDecoder(codingPath: codingPath, context: context)
     }
 }

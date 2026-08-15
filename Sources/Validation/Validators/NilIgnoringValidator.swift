@@ -1,10 +1,3 @@
-//
-//  NilIgnoringValidator.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 /// Combines an optional and non-optional `Validator` using OR logic. The non-optional
@@ -12,8 +5,8 @@ import Foundation
 ///
 ///     try validations.add(\.email, .nil || .email)
 ///
-public func ||<T> (lhs: Validator<T?>, rhs: Validator<T>) -> Validator<T?> {
-    return lhs || NilIgnoringValidator(rhs).validator()
+public func || <T>(lhs: Validator<T?>, rhs: Validator<T>) -> Validator<T?> {
+    lhs || NilIgnoringValidator(rhs).validator()
 }
 
 /// Combines an optional and non-optional `Validator` using OR logic. The non-optional
@@ -21,8 +14,8 @@ public func ||<T> (lhs: Validator<T?>, rhs: Validator<T>) -> Validator<T?> {
 ///
 ///     try validations.add(\.email, .nil || .email)
 ///
-public func ||<T> (lhs: Validator<T>, rhs: Validator<T?>) -> Validator<T?> {
-    return NilIgnoringValidator(lhs).validator() || rhs
+public func || <T>(lhs: Validator<T>, rhs: Validator<T?>) -> Validator<T?> {
+    NilIgnoringValidator(lhs).validator() || rhs
 }
 
 /// Combines an optional and non-optional `Validator` using AND logic. The non-optional
@@ -30,8 +23,8 @@ public func ||<T> (lhs: Validator<T>, rhs: Validator<T?>) -> Validator<T?> {
 ///
 ///     try validations.add(\.email, !.nil && .email)
 ///
-public func &&<T> (lhs: Validator<T?>, rhs: Validator<T>) -> Validator<T?> {
-    return lhs && NilIgnoringValidator(rhs).validator()
+public func && <T>(lhs: Validator<T?>, rhs: Validator<T>) -> Validator<T?> {
+    lhs && NilIgnoringValidator(rhs).validator()
 }
 
 /// Combines an optional and non-optional `Validator` using AND logic. The non-optional
@@ -39,19 +32,20 @@ public func &&<T> (lhs: Validator<T?>, rhs: Validator<T>) -> Validator<T?> {
 ///
 ///     try validations.add(\.email, !.nil && .email)
 ///
-public func &&<T> (lhs: Validator<T>, rhs: Validator<T?>) -> Validator<T?> {
-    return NilIgnoringValidator(lhs).validator() && rhs
+public func && <T>(lhs: Validator<T>, rhs: Validator<T?>) -> Validator<T?> {
+    NilIgnoringValidator(lhs).validator() && rhs
 }
 
 // MARK: Private
+
 /// A validator that ignores nil values.
-fileprivate struct NilIgnoringValidator<T>: ValidatorType {
+private struct NilIgnoringValidator<T>: ValidatorType {
     /// right validator
     let base: Validator<T>
 
     /// See `ValidatorType`.
-    public var validatorReadable: String {
-        return base.readable
+    var validatorReadable: String {
+        base.readable
     }
 
     /// Creates a new `NilIgnoringValidator`.
@@ -61,7 +55,7 @@ fileprivate struct NilIgnoringValidator<T>: ValidatorType {
 
     /// See `ValidatorType`.
     func validate(_ data: T?) throws {
-        if let data = data {
+        if let data {
             try base.validate(data)
         }
     }

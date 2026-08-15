@@ -1,24 +1,17 @@
-//
-//  AndValidator.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 /// Combines two `Validator`s using AND logic, succeeding if both `Validator`s succeed without error.
 ///
 ///     try validations.add(\.name, .range(5...) && .alphanumeric)
 ///
-public func &&<T> (lhs: Validator<T>, rhs: Validator<T>) -> Validator<T> {
-    return AndValidator(lhs, rhs).validator()
+public func && <T>(lhs: Validator<T>, rhs: Validator<T>) -> Validator<T> {
+    AndValidator(lhs, rhs).validator()
 }
 
-fileprivate struct AndValidator<T>: ValidatorType {
+private struct AndValidator<T>: ValidatorType {
     /// See `ValodatorType`.
-    public var validatorReadable: String {
-        return ""
+    var validatorReadable: String {
+        ""
     }
 
     /// left validator
@@ -56,7 +49,7 @@ fileprivate struct AndValidator<T>: ValidatorType {
 }
 
 /// Error thrown if and validation fails
-fileprivate struct AndValidatorError: ValidationError {
+private struct AndValidatorError: ValidationError {
     /// error thrown by left validator
     let left: ValidationError?
 
@@ -65,16 +58,16 @@ fileprivate struct AndValidatorError: ValidationError {
 
     /// See ValidationError.reason
     var reason: String {
-        if let left = left, let right = right {
+        if let left, let right {
             var mutableLeft = left, mutableRight = right
             mutableLeft.path = path + left.path
             mutableRight.path = path + right.path
             return "\(mutableLeft.reason) and \(mutableRight.reason)"
-        } else if let left = left {
+        } else if let left {
             var mutableLeft = left
             mutableLeft.path = path + left.path
             return mutableLeft.reason
-        } else if let right = right {
+        } else if let right {
             var mutableRight = right
             mutableRight.path = path + right.path
             return mutableRight.reason

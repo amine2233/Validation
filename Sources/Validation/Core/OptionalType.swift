@@ -1,10 +1,3 @@
-//
-//  OptionalType.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 /// Capable of being represented by an optional wrapped type.
@@ -31,14 +24,14 @@ extension Optional: OptionalType {
     /// See `OptionalType.wrapped`
     public var wrapped: Wrapped? {
         switch self {
-        case .none: return nil
-        case .some(let w): return w
+        case .none: nil
+        case let .some(w): w
         }
     }
 
     /// See `OptionalType.makeOptionalType`
-    public static func makeOptionalType(_ wrapped: Wrapped?) -> Optional<Wrapped> {
-        return wrapped
+    public static func makeOptionalType(_ wrapped: Wrapped?) -> Wrapped? {
+        wrapped
     }
 }
 
@@ -53,8 +46,12 @@ public protocol AnyOptionalType {
 
 extension AnyOptionalType where Self: OptionalType {
     /// See `AnyOptionalType.anyWrapped`
-    public var anyWrapped: Any? { return wrapped }
+    public var anyWrapped: Any? {
+        wrapped
+    }
 
     /// See `AnyOptionalType.anyWrappedType`
-    public static var anyWrappedType: Any.Type { return WrappedType.self }
+    public static var anyWrappedType: Any.Type {
+        WrappedType.self
+    }
 }

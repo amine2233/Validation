@@ -18,3 +18,5 @@ tests.xml
 CLAUDE.md
 AGENT.md
 .claude
+
+.swiftpm/

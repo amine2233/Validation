@@ -1,10 +1,3 @@
-//
-//  CharacterSetValidator.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 extension Validator {
@@ -13,7 +6,7 @@ extension Validator {
     ///     try validations.add(\.name, .ascii)
     ///
     public static var ascii: Validator<String> {
-        return .characterSet(.ascii)
+        .characterSet(.ascii)
     }
 
     /// Validates that all characters in a `String` are alphanumeric (a-z,A-Z,0-9).
@@ -21,7 +14,7 @@ extension Validator {
     ///     try validations.add(\.name, .alphanumeric)
     ///
     public static var alphanumeric: Validator<String> {
-        return .characterSet(.alphanumerics)
+        .characterSet(.alphanumerics)
     }
 
     /// Validates that all characters in a `String` are in the supplied `CharacterSet`.
@@ -29,7 +22,7 @@ extension Validator {
     ///     try validations.add(\.name, .characterSet(.alphanumerics + .whitespaces))
     ///
     public static func characterSet(_ characterSet: CharacterSet) -> Validator<String> {
-        return CharacterSetValidator(characterSet).validator()
+        CharacterSetValidator(characterSet).validator()
     }
 }
 
@@ -37,20 +30,20 @@ extension Validator {
 ///
 ///     .characterSet(.alphanumerics + .whitespaces)
 ///
-public func +(lhs: CharacterSet, rhs: CharacterSet) -> CharacterSet {
-    return lhs.union(rhs)
+public func + (lhs: CharacterSet, rhs: CharacterSet) -> CharacterSet {
+    lhs.union(rhs)
 }
 
-
 // MARK: Private
+
 /// Validates that a `String` contains characters in a given `CharacterSet`
-fileprivate struct CharacterSetValidator: ValidatorType {
+private struct CharacterSetValidator: ValidatorType {
     /// `CharacterSet` to validate against.
     let characterSet: CharacterSet
 
     /// See `Validator`
-    public var validatorReadable: String {
-        if characterSet.traits.count > 0 {
+    var validatorReadable: String {
+        if !characterSet.traits.isEmpty {
             let string = characterSet.traits.joined(separator: ", ")
             return "in character set (\(string))"
         } else {
@@ -64,10 +57,10 @@ fileprivate struct CharacterSetValidator: ValidatorType {
     }
 
     /// See `Validator`
-    public func validate(_ s: String) throws {
+    func validate(_ s: String) throws {
         if let range = s.rangeOfCharacter(from: characterSet.inverted) {
             var reason = "contains an invalid character: '\(s[range])'"
-            if characterSet.traits.count > 0 {
+            if !characterSet.traits.isEmpty {
                 let string = characterSet.traits.joined(separator: ", ")
                 reason += " (allowed: \(string))"
             }
@@ -80,13 +73,12 @@ extension CharacterSet {
     /// ASCII (byte 0..<128) character set.
     fileprivate static var ascii: CharacterSet {
         var ascii: CharacterSet = .init()
-        for i in 0..<128 {
+        for i in 0 ..< 128 {
             ascii.insert(Unicode.Scalar(i)!)
         }
         return ascii
     }
 }
-
 
 extension CharacterSet {
     /// Returns an array of strings describing the contents of this `CharacterSet`.

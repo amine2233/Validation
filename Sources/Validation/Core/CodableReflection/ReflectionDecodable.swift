@@ -1,16 +1,12 @@
-//
-//  ReflectionDecodable.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
-/// Types conforming to this protocol can be created dynamically for use in reflecting the structure of a `Decodable` type.
+/// Types conforming to this protocol can be created dynamically for use in reflecting the structure of a
+/// `Decodable` type.
 ///
-/// `ReflectionDecodable` requires that a type declare two _distinct_ representations of itself. It also requires that the type
-/// declare a method for comparing those two representations. If the conforming type is already equatable, this method will
+/// `ReflectionDecodable` requires that a type declare two _distinct_ representations of itself. It also
+/// requires that the type
+/// declare a method for comparing those two representations. If the conforming type is already equatable,
+/// this method will
 /// not be required.
 ///
 /// A `Bool` is a simple type that is capable of conforming to `ReflectionDecodable`:
@@ -19,7 +15,8 @@ import Foundation
 ///         static func reflectDecoded() -> (Bool, Bool) { return (false, true) }
 ///     }
 ///
-/// For some types, like an `enum` with only one case, it is impossible to conform to `ReflectionDecodable`. In these situations
+/// For some types, like an `enum` with only one case, it is impossible to conform to `ReflectionDecodable`.
+/// In these situations
 /// you must expand the type to have at least two distinct cases, or use a different method of reflection.
 ///
 ///     enum Pet { case cat } // unable to conform
@@ -31,9 +28,11 @@ import Foundation
 ///         static func reflectDecoded() -> (Pet, Pet) { return (.cat, .dog) }
 ///     }
 ///
-/// Many types already conform to `ReflectionDecodable` such as `String`, `Int`, `Double`, `UUID`, `Array`, `Dictionary`, and `Optional`.
+/// Many types already conform to `ReflectionDecodable` such as `String`, `Int`, `Double`, `UUID`, `Array`,
+/// `Dictionary`, and `Optional`.
 ///
-/// Other types will have free implementation provided when conformance is added, like `RawRepresentable` types.
+/// Other types will have free implementation provided when conformance is added, like `RawRepresentable`
+/// types.
 ///
 ///     enum Direction: UInt8, ReflectionDecodable {
 ///         case left, right
@@ -57,7 +56,8 @@ public protocol ReflectionDecodable: AnyReflectionDecodable {
     ///         static func reflectDecoded() -> (Pet, Pet) { return (cat, dog) }
     ///     }
     ///
-    /// In the case of the above example, this method should return `true` if supplied `Pet.cat` and false for anything else.
+    /// In the case of the above example, this method should return `true` if supplied `Pet.cat` and false for
+    /// anything else.
     /// This method is automatically implemented for types that conform to `Equatable.
     ///
     /// - throws: Any errors comparing instances.
@@ -70,50 +70,61 @@ extension ReflectionDecodable where Self: Equatable {
     ///
     /// See `ReflectionDecodable.reflectDecodedIsLeft(_:)` for more information.
     public static func reflectDecodedIsLeft(_ item: Self) throws -> Bool {
-        return try Self.reflectDecoded().0 == item
+        try reflectDecoded().0 == item
     }
 }
 
 // MARK: Types
+
 extension String: ReflectionDecodable {
     /// See `ReflectionDecodable.reflectDecoded()` for more information.
-    public static func reflectDecoded() -> (String, String) { return ("0", "1") }
+    public static func reflectDecoded() -> (String, String) {
+        ("0", "1")
+    }
 }
 
 extension FixedWidthInteger {
     /// See `ReflectionDecodable.reflectDecoded()` for more information.
-    public static func reflectDecoded() -> (Self, Self) { return (0, 1) }
+    public static func reflectDecoded() -> (Self, Self) {
+        (0, 1)
+    }
 }
 
-extension UInt: ReflectionDecodable { }
-extension UInt8: ReflectionDecodable { }
-extension UInt16: ReflectionDecodable { }
-extension UInt32: ReflectionDecodable { }
-extension UInt64: ReflectionDecodable { }
+extension UInt: ReflectionDecodable {}
+extension UInt8: ReflectionDecodable {}
+extension UInt16: ReflectionDecodable {}
+extension UInt32: ReflectionDecodable {}
+extension UInt64: ReflectionDecodable {}
 
-extension Int: ReflectionDecodable { }
-extension Int8: ReflectionDecodable { }
-extension Int16: ReflectionDecodable { }
-extension Int32: ReflectionDecodable { }
-extension Int64: ReflectionDecodable { }
+extension Int: ReflectionDecodable {}
+extension Int8: ReflectionDecodable {}
+extension Int16: ReflectionDecodable {}
+extension Int32: ReflectionDecodable {}
+extension Int64: ReflectionDecodable {}
 
 extension Bool: ReflectionDecodable {
     /// See `ReflectionDecodable.reflectDecoded()` for more information.
-    public static func reflectDecoded() -> (Bool, Bool) { return (false, true) }
+    public static func reflectDecoded() -> (Bool, Bool) {
+        (false, true)
+    }
 }
 
 extension BinaryFloatingPoint {
     /// See `ReflectionDecodable.reflectDecoded()` for more information.
-    public static func reflectDecoded() -> (Self, Self) { return (0, 1) }
+    public static func reflectDecoded() -> (Self, Self) {
+        (0, 1)
+    }
 }
 
 extension Decimal: ReflectionDecodable {
     /// See `ReflectionDecodable.reflectDecoded()` for more information.
-    public static func reflectDecoded() -> (Decimal, Decimal) { return (0, 1) }
+    public static func reflectDecoded() -> (Decimal, Decimal) {
+        (0, 1)
+    }
 }
 
-extension Float: ReflectionDecodable { }
-extension Double: ReflectionDecodable { }
+extension Float: ReflectionDecodable {}
+extension Double: ReflectionDecodable {}
 
 extension UUID: ReflectionDecodable {
     /// See `ReflectionDecodable.reflectDecoded()` for more information.
@@ -154,6 +165,7 @@ extension Optional: ReflectionDecodable {
         guard let wrapped = item else {
             return false
         }
+
         return try forceCast(Wrapped.self).anyReflectDecodedIsLeft(wrapped)
     }
 }
@@ -167,7 +179,7 @@ extension Array: ReflectionDecodable {
 
     /// See `ReflectionDecodable.reflectDecodedIsLeft(_:)` for more information.
     public static func reflectDecodedIsLeft(_ item: [Element]) throws -> Bool {
-        return try forceCast(Element.self).anyReflectDecodedIsLeft(item[0])
+        try forceCast(Element.self).anyReflectDecodedIsLeft(item[0])
     }
 }
 
@@ -197,7 +209,7 @@ extension Set: ReflectionDecodable {
 
     /// See `ReflectionDecodable.reflectDecodedIsLeft(_:)` for more information.
     public static func reflectDecodedIsLeft(_ item: Set<Element>) throws -> Bool {
-        return try forceCast(Element.self).anyReflectDecodedIsLeft(item.first!)
+        try forceCast(Element.self).anyReflectDecodedIsLeft(item.first!)
     }
 }
 
@@ -211,6 +223,7 @@ extension URL: ReflectionDecodable {
 }
 
 // MARK: Type Erased
+
 /// Type-erased version of `ReflectionDecodable`
 public protocol AnyReflectionDecodable {
     /// Type-erased version of `ReflectionDecodable.reflectDecoded()`.
@@ -237,11 +250,12 @@ extension ReflectionDecodable {
     ///
     /// See `ReflectionDecodable.reflectDecodedIsLeft(_:)` for more information.
     public static func anyReflectDecodedIsLeft(_ any: Any) throws -> Bool {
-        return try reflectDecodedIsLeft(any as! Self)
+        try reflectDecodedIsLeft(any as! Self)
     }
 }
 
-/// Trys to cast a type to `AnyReflectionDecodable.Type`. This can be removed when conditional conformance supports runtime querying.
+/// Trys to cast a type to `AnyReflectionDecodable.Type`. This can be removed when conditional conformance
+/// supports runtime querying.
 func forceCast<T>(_ type: T.Type) throws -> AnyReflectionDecodable.Type {
     guard let casted = T.self as? AnyReflectionDecodable.Type else {
         throw CoreError(
@@ -252,32 +266,27 @@ func forceCast<T>(_ type: T.Type) throws -> AnyReflectionDecodable.Type {
             ]
         )
     }
+
     return casted
 }
-
-#if swift(>=4.1.50)
-#else
-public protocol CaseIterable {
-    static var allCases: [Self] { get }
-}
-#endif
 
 extension ReflectionDecodable where Self: CaseIterable {
     /// Default implementation of `ReflectionDecodable` for enums that are also `CaseIterable`.
     ///
     /// See `ReflectionDecodable.reflectDecoded(_:)` for more information.
     public static func reflectDecoded() throws -> (Self, Self) {
-        /// enum must have at least 2 unique cases
+        // enum must have at least 2 unique cases
         guard allCases.count > 1,
-            let first = allCases.first, let last = allCases.suffix(1).first else {
-                throw CoreError(
-                    identifier: "ReflectionDecodable",
-                    reason: "\(Self.self) enum must have at least 2 cases",
-                    suggestedFixes: [
-                        "Add at least 2 cases to the enum."
-                    ]
-                )
+              let first = allCases.first, let last = allCases.suffix(1).first else {
+            throw CoreError(
+                identifier: "ReflectionDecodable",
+                reason: "\(Self.self) enum must have at least 2 cases",
+                suggestedFixes: [
+                    "Add at least 2 cases to the enum."
+                ]
+            )
         }
+
         return (first, last)
     }
 }
