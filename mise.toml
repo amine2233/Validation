@@ -94,3 +94,32 @@ if [[ "${usage_serve:-}" == "true" ]]; then
     python3 -m http.server -d public
 fi
 '''
+
+[tasks.check_format]
+description = "Fail if the code is not already formatted"
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+# ponytail: executor format has no --lint flag, so format then diff the diff
+before=$(git diff)
+executor format .
+if [[ "$before" != "$(git diff)" ]]; then
+    git diff
+    echo "❌ formatting changed files — commit the result of 'mise format'" >&2
+    exit 1
+fi
+'''
+
+[tasks.lint]
+description = "Run all static checks (format + code + documentation) — used by CI's lint job"
+depends = ["check_format", "check_code", "check_documentation"]
+
+[tasks.check_merge_request_title]
+description = "Lint the pull request title and post the result as a PR comment."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+# ponytail: executor expects CI_MERGE_REQUEST_TITLE (GitLab-style), simulate it from GitHub API
+export CI_MERGE_REQUEST_TITLE=$(gh pr view "${COMMENT_TARGET?}" --json title -q .title)
+executor check-ci merge-request-title --post-comment --comment-token "${GITHUB_TOKEN?}" --comment-target "${COMMENT_TARGET?}"
+'''
