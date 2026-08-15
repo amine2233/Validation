@@ -1,17 +1,10 @@
-//
-//  ValidationError.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 /// A validation error that supports dynamic key paths. These key paths will be automatically
 /// combined to support nested validations.
 ///
 /// See `BasicValidationError` for a default implementation.
-public protocol ValidationError: Error {
+public protocol ValidationError: Error, Sendable {
     var path: [String] { get set }
 
     var reason: String { get }
@@ -20,25 +13,24 @@ public protocol ValidationError: Error {
 extension ValidationError {
     /// See `Debuggable`.
     public var identifier: String {
-        return "validationFailed"
+        "validationFailed"
     }
 
     var reason: String {
-        return ""
+        ""
     }
 }
 
 // MARK: Basic
 
 /// Errors that can be thrown while working with validation
-public struct BasicValidationError: ValidationError {
+public struct BasicValidationError: ValidationError, Sendable {
     /// See `Debuggable`
     public var reason: String {
-        let path: String
-        if self.path.count > 0 {
-            path = "" + self.path.joined(separator: ".") + ""
+        let path = if !self.path.isEmpty {
+            "" + self.path.joined(separator: ".") + ""
         } else {
-            path = "data"
+            "data"
         }
         return "\(path) \(message)"
     }

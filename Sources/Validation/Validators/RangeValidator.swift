@@ -1,19 +1,12 @@
-//
-//  RangeValidator.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
-extension Validator where T: Comparable {
+extension Validator where T: Comparable & Sendable {
     /// Validates that the data is within the supplied `ClosedRange`.
     ///
     ///     try validations.add(\.age, .range(5...10))
     ///
     public static func range(_ range: ClosedRange<T>) -> Validator<T> {
-        return RangeValidator(min: range.lowerBound, max: range.upperBound).validator()
+        RangeValidator(min: range.lowerBound, max: range.upperBound).validator()
     }
 
     /// Validates that the data is less than the supplied upper bound using `PartialRangeThrough`.
@@ -21,7 +14,7 @@ extension Validator where T: Comparable {
     ///     try validations.add(\.age, .range(...10))
     ///
     public static func range(_ range: PartialRangeThrough<T>) -> Validator<T> {
-        return RangeValidator(min: nil, max: range.upperBound).validator()
+        RangeValidator(min: nil, max: range.upperBound).validator()
     }
 
     /// Validates that the data is less than the supplied lower bound using `PartialRangeFrom`.
@@ -29,33 +22,34 @@ extension Validator where T: Comparable {
     ///     try validations.add(\.age, .range(5...))
     ///
     public static func range(_ range: PartialRangeFrom<T>) -> Validator<T> {
-        return RangeValidator(min: range.lowerBound, max: nil).validator()
+        RangeValidator(min: range.lowerBound, max: nil).validator()
     }
 }
 
-extension Validator where T: Comparable & Strideable {
+extension Validator where T: Comparable & Strideable & Sendable {
     /// Validates that the data is within the supplied `Range`.
     ///
     ///     try validations.add(\.age, .range(5..<10))
     ///
     public static func range(_ range: Range<T>) -> Validator<T> {
-        return RangeValidator(min: range.lowerBound, max: range.upperBound.advanced(by: -1)).validator()
+        RangeValidator(min: range.lowerBound, max: range.upperBound.advanced(by: -1)).validator()
     }
 }
 
 // MARK: Private
+
 /// Validates whether the data is within a supplied int range.
-fileprivate struct RangeValidator<T>: ValidatorType where T: Comparable {
+private struct RangeValidator<T: Comparable & Sendable>: ValidatorType {
     /// See `ValidatorType`.
     var validatorReadable: String {
         if let min = self.min, let max = self.max {
-            return "between \(min) and \(max)"
+            "between \(min) and \(max)"
         } else if let min = self.min {
-            return "at least \(min)"
+            "at least \(min)"
         } else if let max = self.max {
-            return "at most \(max)"
+            "at most \(max)"
         } else {
-            return "valid"
+            "valid"
         }
     }
 

@@ -1,10 +1,3 @@
-//
-//  Validatable.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 /// Capable of being validated. Conformance adds a throwing `validate()` method.
@@ -21,7 +14,7 @@ import Foundation
 ///         }
 ///     }
 ///
-public protocol Validatable {
+public protocol Validatable: Sendable {
     /// The validations that will run when `validate()` is called on an instance of this class.
     ///
     ///     struct User: Validatable, Reflectable {

@@ -1,13 +1,6 @@
-//
-//  ValidatorType.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
-public protocol ValidatorType {
+public protocol ValidatorType: Sendable {
     /// Data type to validate
     associatedtype ValidationData
 
@@ -29,6 +22,6 @@ public protocol ValidatorType {
 extension ValidatorType {
     /// Create a `Validator` for this `ValidatorType`.
     public func validator() -> Validator<ValidationData> {
-        return Validator(validatorReadable, validate)
+        Validator(validatorReadable, validate)
     }
 }

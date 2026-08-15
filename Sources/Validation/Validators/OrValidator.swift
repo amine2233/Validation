@@ -1,10 +1,3 @@
-//
-//  OrValidator.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 /// Combines two `Validator`s, succeeding if either of the `Validator`s does not fail.
@@ -12,16 +5,17 @@ import Foundation
 ///     // validate email is valid or is nil
 ///     try validations.add(\.email, .email || .nil)
 ///
-public func ||<T> (lhs: Validator<T>, rhs: Validator<T>) -> Validator<T> {
-    return OrValidator(lhs, rhs).validator()
+public func || <T>(lhs: Validator<T>, rhs: Validator<T>) -> Validator<T> {
+    OrValidator(lhs, rhs).validator()
 }
 
 // MARK: Private
+
 /// Combines two validators, if either is true the validation will succeed.
-fileprivate struct OrValidator<T>: ValidatorType {
+private struct OrValidator<T>: ValidatorType {
     /// See Validator.inverseMessage
-    public var validatorReadable: String {
-        return "\(lhs.readable) or is \(rhs.readable)"
+    var validatorReadable: String {
+        "\(lhs.readable) or is \(rhs.readable)"
     }
 
     /// left validator
@@ -51,7 +45,7 @@ fileprivate struct OrValidator<T>: ValidatorType {
 }
 
 /// Error thrown if or validation fails
-fileprivate struct OrValidatorError: ValidationError {
+private struct OrValidatorError: ValidationError {
     /// error thrown by left validator
     let left: ValidationError
 
@@ -60,10 +54,10 @@ fileprivate struct OrValidatorError: ValidationError {
 
     /// See ValidationError.reason
     var reason: String {
-        var left = self.left
-        left.path = self.path + self.left.path
-        var right = self.right
-        right.path = self.path + self.right.path
+        var left = left
+        left.path = path + self.left.path
+        var right = right
+        right.path = path + self.right.path
         return "\(left.reason) and \(right.reason)"
     }
 

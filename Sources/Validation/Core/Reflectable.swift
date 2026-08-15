@@ -1,10 +1,3 @@
-//
-//  Reflectable.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 /// This protocol allows for reflection of properties on conforming types.
@@ -56,7 +49,6 @@ import Foundation
 /// Even if your type gets the default implementation for being `Decodable`, you can still override both
 /// the `reflectProperties(depth:)` and `reflectProperty(forKey:)` methods.
 public protocol Reflectable: AnyReflectable {
-
     /// Returns a `ReflectedProperty` for the supplied key path.
     ///
     ///     struct Pet: Decodable {
@@ -83,12 +75,12 @@ public protocol Reflectable: AnyReflectable {
 extension Reflectable {
     /// Reflects all of this type's `ReflectedProperty`s.
     public static func reflectProperties() throws -> [ReflectedProperty] {
-        return try reflectProperties(depth: 0)
+        try reflectProperties(depth: 0)
     }
 
     /// See `Reflectable`.
     public static func reflectProperty<T>(forKey keyPath: KeyPath<Self, T>) throws -> ReflectedProperty? {
-        return try anyReflectProperty(valueType: T.self, keyPath: keyPath)
+        try anyReflectProperty(valueType: T.self, keyPath: keyPath)
     }
 }
 
@@ -133,7 +125,8 @@ public protocol AnyReflectable {
     ///     }
     ///
     ///     try User.anyReflectProperty(valueType: String.self, keyPath: \User.name) // ["name"] String
-    ///     try User.anyReflectProperty(valueType: String.self, keyPath: \User.pet.name) // ["pet", "name"] String
+    ///     try User.anyReflectProperty(valueType: String.self, keyPath: \User.pet.name) // ["pet", "name"]
+    /// String
     ///
     /// - parameters:
     ///     - valueType: Value type of the key path.
@@ -148,7 +141,7 @@ public protocol AnyReflectable {
 ///     let property = try User.reflectProperty(forKey: \.pet.name)
 ///     print(property) // ["pet", "name"] String
 ///
-public struct ReflectedProperty {
+public struct ReflectedProperty: Sendable {
     /// This property's type.
     public let type: Any.Type
 
@@ -168,16 +161,16 @@ public struct ReflectedProperty {
     }
 }
 
-extension Collection where Element == ReflectedProperty {
+extension Collection<ReflectedProperty> {
     /// Removes all optional properties from an array of `ReflectedProperty`.
     public func optionalsRemoved() -> [ReflectedProperty] {
-         return filter { !($0.type is AnyOptionalType.Type) }
+        filter { !($0.type is AnyOptionalType.Type) }
     }
 }
 
 extension ReflectedProperty: CustomStringConvertible {
     /// See `CustomStringConvertible.description`
     public var description: String {
-        return "\(path.joined(separator: ".")): \(type)"
+        "\(path.joined(separator: ".")): \(type)"
     }
 }

@@ -1,29 +1,23 @@
-//
-//  NotValidator.swift
-//  Validation
-//
-//  Created by Amine Bensalah on 02/05/2020.
-//
-
 import Foundation
 
 /// Inverts a `Validation`.
 ///
 ///     try validations.add(\.email, .email && !.nil)
 ///
-public prefix func !<T> (rhs: Validator<T>) -> Validator<T> {
-    return NotValidator(rhs).validator()
+public prefix func ! <T>(rhs: Validator<T>) -> Validator<T> {
+    NotValidator(rhs).validator()
 }
 
 // MARK: Private
+
 /// Inverts a validator
-fileprivate struct NotValidator<T>: ValidatorType {
+private struct NotValidator<T>: ValidatorType {
     /// See `ValidatorType`.
     typealias ValidationData = T
 
     /// See `ValidatorType`
-    public var validatorReadable: String {
-        return "not \(rhs.readable)"
+    var validatorReadable: String {
+        "not \(rhs.readable)"
     }
 
     /// The inverted `Validator`.
