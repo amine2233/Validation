@@ -119,5 +119,6 @@ description = "Lint the pull request title and post the result as a PR comment."
 run = '''
 #!/usr/bin/env bash
 set -euo pipefail
+export GITHUB_PULL_REQUEST_TITLE="${GITHUB_PULL_REQUEST_TITLE:-$(gh pr view "${COMMENT_TARGET?}" --json title -q .title)}"
 executor check-ci merge-request-title --post-comment --comment-token "${GITHUB_TOKEN?}" --comment-target "${COMMENT_TARGET?}"
 '''
