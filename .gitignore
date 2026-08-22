@@ -20,3 +20,5 @@ AGENT.md
 .claude
 
 .swiftpm/
+
+.env*
